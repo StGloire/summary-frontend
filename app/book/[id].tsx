@@ -1,11 +1,16 @@
+import { useEffect, useMemo, useState } from "react"
 import { View, Text, ScrollView, Pressable } from "react-native"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { Image } from "expo-image"
 import { Ionicons } from "@expo/vector-icons"
 
-import { getBookById } from "../../data/books"
+import {
+  AudioPlayer,
+  type AudioPlayerChapter
+} from "../../components/audio/AudioPlayer"
 import { BottomNav } from "../../components/layout/BottomNav"
 import { useTTS } from "../../components/tts/useTTS"
+import { getBookById } from "../../data/books"
 import { usePurchasedBook } from "../../hooks/usePurchasedBooks"
 
 export default function BookDetailScreen() {
@@ -14,11 +19,68 @@ export default function BookDetailScreen() {
   const selectedBookId = Array.isArray(id) ? id[0] : id
 
   const book = selectedBookId ? getBookById(selectedBookId) : null
-
-  const { speak, stop, isSpeaking } = useTTS()
   const isPurchased = usePurchasedBook(book?.id)
+  const [currentChapter, setCurrentChapter] = useState<AudioPlayerChapter | null>(null)
 
-  if (!book) {
+  const {
+    play,
+    pause,
+    resume,
+    stop,
+    seekBy,
+    isSpeaking,
+    isPaused,
+    isStopped,
+    positionMs,
+    durationMs
+  } = useTTS()
+
+  const introChapter = useMemo<AudioPlayerChapter | null>(() => {
+    if (!book) {
+      return null
+    }
+
+    return {
+      id: `${book.id}-intro`,
+      title: book.intro.title,
+      content: book.intro.content,
+      duration: book.intro.duration,
+      isFree: true
+    }
+  }, [book])
+
+  const playableChapters = useMemo<AudioPlayerChapter[]>(() => {
+    if (!book || !introChapter) {
+      return []
+    }
+
+    const premiumChapters = isPurchased
+      ? book.chapters.map((chapter) => ({
+          id: chapter.id,
+          title: chapter.title,
+          content: chapter.content,
+          duration: chapter.duration,
+          isFree: false
+        }))
+      : []
+
+    return [introChapter, ...premiumChapters]
+  }, [book, introChapter, isPurchased])
+
+  const currentChapterIndex = currentChapter
+    ? playableChapters.findIndex((chapter) => chapter.id === currentChapter.id)
+    : -1
+
+  const canGoPrevious = currentChapterIndex > 0
+  const canGoNext =
+    currentChapterIndex >= 0 && currentChapterIndex < playableChapters.length - 1
+
+  useEffect(() => {
+    setCurrentChapter(null)
+    void stop()
+  }, [selectedBookId])
+
+  if (!book || !introChapter) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text style={{ color: "white" }}>Livre non trouvé</Text>
@@ -26,9 +88,42 @@ export default function BookDetailScreen() {
     )
   }
 
+  const isIntroActive = currentChapter?.id === introChapter.id
+
+  const playChapter = async (chapter: AudioPlayerChapter) => {
+    setCurrentChapter(chapter)
+    await play(chapter.content)
+  }
+
+  const handleResume = async () => {
+    if (!currentChapter) {
+      return
+    }
+
+    if (isStopped && positionMs >= durationMs) {
+      await play(currentChapter.content)
+      return
+    }
+
+    await resume()
+  }
+
+  const handleChapterNavigation = async (direction: -1 | 1) => {
+    if (currentChapterIndex < 0) {
+      return
+    }
+
+    const targetChapter = playableChapters[currentChapterIndex + direction]
+
+    if (!targetChapter) {
+      return
+    }
+
+    await playChapter(targetChapter)
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
-
       {/* Header */}
       <View
         style={{
@@ -46,7 +141,6 @@ export default function BookDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* Book Info */}
         <View style={{ padding: 20, flexDirection: "row", gap: 16 }}>
           <Image
@@ -80,36 +174,49 @@ export default function BookDetailScreen() {
           </Text>
 
           <Pressable
-            onPress={() => speak(book.intro.content)}
+            onPress={() => void playChapter(introChapter)}
             style={{
-              backgroundColor: "#D4AF37",
-              padding: 12,
-              borderRadius: 8,
-              alignItems: "center"
+              backgroundColor: isIntroActive ? "rgba(212,175,55,0.18)" : "#1A1A1A",
+              padding: 14,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: isIntroActive ? "#D4AF37" : "#2A2A2A",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between"
             }}
           >
-            <Text style={{ fontWeight: "600" }}>
-              {isSpeaking ? "Lecture..." : "Écouter l'introduction"}
-            </Text>
-          </Pressable>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={{ color: isIntroActive ? "#D4AF37" : "white", fontWeight: "600" }}>
+                {introChapter.title}
+              </Text>
 
-          {isSpeaking && (
-            <Pressable
-              onPress={stop}
+              <Text style={{ color: "#8A8A8A", fontSize: 12, marginTop: 4 }}>
+                {isIntroActive && isSpeaking
+                  ? "Lecture en cours"
+                  : isIntroActive && isPaused
+                    ? "Lecture en pause"
+                    : "Écouter l'introduction"}
+              </Text>
+            </View>
+
+            <View
               style={{
-                marginTop: 10,
-                backgroundColor: "#222",
-                padding: 10,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: "#444"
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: isIntroActive ? "#D4AF37" : "#242424",
+                alignItems: "center",
+                justifyContent: "center"
               }}
             >
-              <Text style={{ color: "#D4AF37", textAlign: "center" }}>
-                Arrêter la lecture
-              </Text>
-            </Pressable>
-          )}
+              <Ionicons
+                name={isIntroActive && isSpeaking ? "pause" : "play"}
+                size={16}
+                color={isIntroActive ? "#050505" : "#F5F5F5"}
+              />
+            </View>
+          </Pressable>
         </View>
 
         {/* 🔒 CHAPITRES PREMIUM */}
@@ -120,6 +227,7 @@ export default function BookDetailScreen() {
 
           {book.chapters.map((chapter, index) => {
             const isLocked = !isPurchased
+            const isCurrentChapter = currentChapter?.id === chapter.id
 
             return (
               <Pressable
@@ -136,33 +244,125 @@ export default function BookDetailScreen() {
                     return
                   }
 
-                  speak(chapter.content)
+                  void playChapter({
+                    id: chapter.id,
+                    title: chapter.title,
+                    content: chapter.content,
+                    duration: chapter.duration,
+                    isFree: false
+                  })
                 }}
                 style={{
                   padding: 12,
-                  backgroundColor: "#1A1A1A",
+                  backgroundColor: isCurrentChapter ? "rgba(212,175,55,0.12)" : "#1A1A1A",
                   borderRadius: 10,
                   marginBottom: 10,
-                  opacity: isLocked ? 0.5 : 1
+                  opacity: isLocked ? 0.5 : 1,
+                  borderWidth: isCurrentChapter ? 1 : 0,
+                  borderColor: isCurrentChapter ? "#D4AF37" : "transparent",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between"
                 }}
               >
-                <Text style={{ color: "white" }}>
-                  {isLocked ? "🔒 " : ""}{index + 1}. {chapter.title}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
+                  <View
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: isCurrentChapter ? "#D4AF37" : "#262626"
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isCurrentChapter ? "#050505" : "#A0A0A0",
+                        fontSize: 12,
+                        fontWeight: "700"
+                      }}
+                    >
+                      {index + 1}
+                    </Text>
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: isCurrentChapter ? "#D4AF37" : "white" }}>
+                      {isLocked ? "🔒 " : ""}{chapter.title}
+                    </Text>
+
+                    <Text style={{ color: "#8A8A8A", fontSize: 12, marginTop: 3 }}>
+                      {chapter.duration} min
+                    </Text>
+                  </View>
+                </View>
+
+                {isCurrentChapter && (
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: "#D4AF37"
+                    }}
+                  />
+                )}
               </Pressable>
             )
           })}
         </View>
 
         {/* Résumé */}
-        <View style={{ padding: 20 }}>
+        <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
           <Text style={{ color: "#ddd" }}>
             {book.summary}
           </Text>
         </View>
 
-        <View style={{ height: 80 }} />
+        {currentChapter && (
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginBottom: 20,
+              padding: 16,
+              borderRadius: 14,
+              backgroundColor: "#141414",
+              borderWidth: 1,
+              borderColor: "#242424"
+            }}
+          >
+            <Text style={{ color: "#D4AF37", fontSize: 16, fontWeight: "700", marginBottom: 10 }}>
+              {currentChapter.title}
+            </Text>
+
+            <Text style={{ color: "#D4D4D4", lineHeight: 22 }}>
+              {currentChapter.content}
+            </Text>
+          </View>
+        )}
+
+        <View style={{ height: currentChapter ? 260 : 80 }} />
       </ScrollView>
+
+      {currentChapter && (
+        <AudioPlayer
+          currentChapter={currentChapter}
+          isPlaying={isSpeaking}
+          isPaused={isPaused}
+          positionMs={positionMs}
+          durationMs={durationMs}
+          onPause={() => void pause()}
+          onResume={() => void handleResume()}
+          onStop={() => void stop()}
+          onSeekBackward={() => void seekBy(-5000)}
+          onSeekForward={() => void seekBy(5000)}
+          onPreviousChapter={() => void handleChapterNavigation(-1)}
+          onNextChapter={() => void handleChapterNavigation(1)}
+          canGoPrevious={canGoPrevious}
+          canGoNext={canGoNext}
+        />
+      )}
 
       <BottomNav />
     </View>
