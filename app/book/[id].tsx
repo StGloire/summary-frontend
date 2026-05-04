@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { View, Text, ScrollView, Pressable } from "react-native"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { Image } from "expo-image"
@@ -6,23 +5,26 @@ import { Ionicons } from "@expo/vector-icons"
 
 import { getBookById } from "../../data/books"
 import { BottomNav } from "../../components/layout/BottomNav"
+import { useTTS } from "../../components/tts/useTTS"
+import { usePurchasedBook } from "../../hooks/usePurchasedBooks"
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams()
   const router = useRouter()
+  const selectedBookId = Array.isArray(id) ? id[0] : id
 
-  const book = id ? getBookById(id.toString()) : null
+  const book = selectedBookId ? getBookById(selectedBookId) : null
 
-  const [currentChapter, setCurrentChapter] = useState(null)
-  const [activeTab, setActiveTab] = useState("summary")
+  const { speak, stop, isSpeaking } = useTTS()
+  const isPurchased = usePurchasedBook(book?.id)
 
   if (!book) {
     return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text style={{ color: "white" }}>Livre non trouvé</Text>
-        </View>
+      </View>
     )
-    }
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
@@ -71,101 +73,93 @@ export default function BookDetailScreen() {
           </View>
         </View>
 
-        {/* Actions */}
-        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 20 }}>
+        {/* 🎧 INTRO GRATUITE */}
+        <View style={{ paddingHorizontal: 20 }}>
+          <Text style={{ color: "#D4AF37", marginBottom: 10 }}>
+            🎧 Introduction (gratuit)
+          </Text>
+
           <Pressable
-            onPress={() => setCurrentChapter(book.chapters[0])}
+            onPress={() => speak(book.intro.content)}
             style={{
-              flex: 1,
               backgroundColor: "#D4AF37",
               padding: 12,
               borderRadius: 8,
               alignItems: "center"
             }}
           >
-            <Text style={{ fontWeight: "600" }}>Écouter</Text>
+            <Text style={{ fontWeight: "600" }}>
+              {isSpeaking ? "Lecture..." : "Écouter l'introduction"}
+            </Text>
           </Pressable>
+
+          {isSpeaking && (
+            <Pressable
+              onPress={stop}
+              style={{
+                marginTop: 10,
+                backgroundColor: "#222",
+                padding: 10,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#444"
+              }}
+            >
+              <Text style={{ color: "#D4AF37", textAlign: "center" }}>
+                Arrêter la lecture
+              </Text>
+            </Pressable>
+          )}
         </View>
 
-        {/* Tabs */}
-        <View style={{ flexDirection: "row", marginTop: 20 }}>
-          {["summary", "chapters", "ideas"].map((tab) => {
-            const isActive = activeTab === tab
+        {/* 🔒 CHAPITRES PREMIUM */}
+        <View style={{ padding: 20 }}>
+          <Text style={{ color: isPurchased ? "#D4AF37" : "#888", marginBottom: 10 }}>
+            {isPurchased ? "✅ Contenu débloqué" : "🔒 Contenu premium"}
+          </Text>
+
+          {book.chapters.map((chapter, index) => {
+            const isLocked = !isPurchased
 
             return (
               <Pressable
-                key={tab}
-                onPress={() => setActiveTab(tab)}
+                key={chapter.id}
+                onPress={() => {
+                  if (isLocked) {
+                    router.push({
+                      pathname: "/purchase",
+                      params: {
+                        bookId: book.id,
+                        title: book.title
+                      }
+                    })
+                    return
+                  }
+
+                  speak(chapter.content)
+                }}
                 style={{
-                  flex: 1,
                   padding: 12,
-                  borderBottomWidth: 2,
-                  borderBottomColor: isActive ? "#D4AF37" : "transparent"
+                  backgroundColor: "#1A1A1A",
+                  borderRadius: 10,
+                  marginBottom: 10,
+                  opacity: isLocked ? 0.5 : 1
                 }}
               >
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: isActive ? "#D4AF37" : "#888"
-                  }}
-                >
-                  {tab}
+                <Text style={{ color: "white" }}>
+                  {isLocked ? "🔒 " : ""}{index + 1}. {chapter.title}
                 </Text>
               </Pressable>
             )
           })}
         </View>
 
-        {/* CONTENT */}
+        {/* Résumé */}
         <View style={{ padding: 20 }}>
-
-          {activeTab === "summary" && (
-            <Text style={{ color: "#ddd" }}>
-              {book.summary}
-            </Text>
-          )}
-
-          {activeTab === "chapters" && (
-            book.chapters.map((chapter, index) => (
-              <Pressable
-                key={chapter.id}
-                onPress={() => setCurrentChapter(chapter)}
-                style={{
-                  padding: 12,
-                  backgroundColor: "#1A1A1A",
-                  borderRadius: 10,
-                  marginBottom: 10
-                }}
-              >
-                <Text style={{ color: "white" }}>
-                  {index + 1}. {chapter.title}
-                </Text>
-              </Pressable>
-            ))
-          )}
-
-          {activeTab === "ideas" && (
-            book.keyIdeas.map((idea, index) => (
-              <Text key={index} style={{ color: "#ddd", marginBottom: 10 }}>
-                • {idea}
-              </Text>
-            ))
-          )}
-
+          <Text style={{ color: "#ddd" }}>
+            {book.summary}
+          </Text>
         </View>
-
-        {/* Chapter content */}
-        {currentChapter && (
-          <View style={{ padding: 20 }}>
-            <Text style={{ color: "#D4AF37", marginBottom: 10 }}>
-              {currentChapter.title}
-            </Text>
-
-            <Text style={{ color: "#ccc" }}>
-              {currentChapter.content}
-            </Text>
-          </View>
-        )}
 
         <View style={{ height: 80 }} />
       </ScrollView>
