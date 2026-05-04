@@ -2,7 +2,19 @@ import { View, Text, Pressable } from "react-native"
 import { Image } from "expo-image"
 import { useRouter } from "expo-router"
 
-export function ContinueReadingCard({ book, progress }) {
+interface ContinueReadingBook {
+  id: string
+  title: string
+  author: string
+  coverImage: string
+}
+
+interface ContinueReadingCardProps {
+  book: ContinueReadingBook
+  progress: number
+}
+
+export function ContinueReadingCard({ book, progress }: ContinueReadingCardProps) {
   const router = useRouter()
 
   return (

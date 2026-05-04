@@ -3,17 +3,23 @@ import { ScrollView, Text, Pressable } from "react-native"
 
 interface CategoryFilterProps {
   categories: string[]
+  activeCategory?: string
   onCategoryChange?: (category: string) => void
 }
 
 export function CategoryFilter({
   categories,
+  activeCategory,
   onCategoryChange
 }: CategoryFilterProps) {
-  const [activeCategory, setActiveCategory] = useState(categories[0])
+  const [internalActiveCategory, setInternalActiveCategory] = useState(categories[0])
+  const currentActiveCategory = activeCategory ?? internalActiveCategory
 
   const handlePress = (category: string) => {
-    setActiveCategory(category)
+    if (activeCategory === undefined) {
+      setInternalActiveCategory(category)
+    }
+
     onCategoryChange?.(category)
   }
 
@@ -27,7 +33,7 @@ export function CategoryFilter({
       }}
     >
       {categories.map((category) => {
-        const isActive = activeCategory === category
+        const isActive = currentActiveCategory === category
 
         return (
           <Pressable

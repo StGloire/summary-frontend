@@ -7,7 +7,7 @@ const navItems = [
   { href: "/explore", icon: "search-outline", label: "Explorer" },
   { href: "/library", icon: "book-outline", label: "Bibliothèque" },
   { href: "/profile", icon: "person-outline", label: "Profil" },
-]
+] as const
 
 export function BottomNav() {
   const router = useRouter()

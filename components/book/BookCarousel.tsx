@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, Pressable } from "react-native"
-import { useRouter } from "expo-router"
+import { Href, useRouter } from "expo-router"
 import { BookCard } from "./BookCard"
 
 interface Book {
@@ -15,7 +15,7 @@ interface BookCarouselProps {
   title: string
   books: Book[]
   showSeeAll?: boolean
-  seeAllHref?: string
+  seeAllHref?: Href
 }
 
 export function BookCarousel({
@@ -25,6 +25,10 @@ export function BookCarousel({
   seeAllHref = "/explore"
 }: BookCarouselProps) {
   const router = useRouter()
+
+  if (!books.length) {
+    return null
+  }
 
   return (
     <View style={{ paddingVertical: 16 }}>
