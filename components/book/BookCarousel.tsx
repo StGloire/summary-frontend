@@ -43,7 +43,7 @@ export function BookCarousel({
           alignItems: "center"
         }}
       >
-        <Text style={{ fontSize: 20, fontWeight: "600" }}>
+        <Text style={{ fontSize: 20, fontWeight: "600", color: "white" }}>
           {title}
         </Text>
 

@@ -1,3 +1,4 @@
+import { usePurchases } from "../hooks/usePurchases"
 import { type ComponentProps, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
@@ -10,8 +11,6 @@ import {
 } from "react-native"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-
-import { unlockBook, usePurchasedBook } from "../hooks/usePurchasedBooks"
 
 type PaymentMethod = "mtn" | "airtel"
 type PaymentStep = "form" | "processing" | "pending"
@@ -50,10 +49,11 @@ const paymentMethods: Array<{
 
 export default function PurchaseScreen() {
   const router = useRouter()
+  const { isPurchased: hasPurchasedBook, purchaseBook } = usePurchases()
   const { bookId, title } = useLocalSearchParams()
   const selectedBookId = Array.isArray(bookId) ? bookId[0] : bookId
   const selectedTitle = Array.isArray(title) ? title[0] : title
-  const isPurchased = usePurchasedBook(selectedBookId)
+  const isPurchased = selectedBookId ? hasPurchasedBook(selectedBookId) : false
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("mtn")
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -120,7 +120,7 @@ export default function PurchaseScreen() {
     }, 1800)
   }
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
     if (!selectedBookId) {
       Alert.alert(
         "Livre introuvable",
@@ -129,7 +129,7 @@ export default function PurchaseScreen() {
       return
     }
 
-    unlockBook(selectedBookId)
+    await purchaseBook(selectedBookId)
 
     Alert.alert(
       "Paiement confirmé",

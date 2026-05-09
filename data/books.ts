@@ -1,3 +1,32 @@
+export type Chapter = {
+  id: string
+  title: string
+  content: string
+  duration: number
+  isFree: boolean
+}
+
+export type Book = {
+  id: string
+  title: string
+  author: string
+  summary: string
+  category: string
+  duration: number
+  coverImage: string
+
+  intro: {
+    title: string
+    content: string
+    duration: number
+  }
+
+  chapters: Chapter[]
+
+  keyIdeas: string[]
+}
+
+
 export const books = [
   {
     id: "1",
@@ -128,6 +157,62 @@ export const books = [
         duration: 4,
         content:
           "Trouver des vérités que personne d'autre ne voit."
+      }
+    ]
+  }, 
+  
+  {
+    id: "4",
+    title: "Le Mythe de l'Entrepreneuriat Revisité",
+    author: "Michael Gerber",
+    category: "Entrepreneuriat",
+    duration: 45,
+    isNew: true,
+    coverImage: "https://cdn.kobo.com/book-images/47ca6a4d-d8fd-4fec-9e30-ad2b7b1adf6c/1200/1200/False/the-e-myth-revisited.jpg",
+    summary: "Découvrez pourquoi 80% des petites entreprises échouent et comment transformer la vôtre en une machine performante grâce à la révolution du 'clé en main'.",
+    keyIdeas: [
+      "Le technicien, l'entrepreneur et le manager : les 3 personnalités du chef d'entreprise",
+      "Une entreprise qui dépend de vous n'est pas une entreprise, c'est un emploi",
+      "La franchise de format commercial : vendre l'entreprise, pas le produit",
+      "Travaillez SUR votre entreprise, pas seulement DEDANS"
+    ],
+    // 🎧 GRATUIT
+    intro: {
+      title: "Introduction — Le mythe de l'entrepreneuriat",
+      duration: 8,
+      content: "Le problème des petites entreprises. La plupart des petites entreprises aux États-Unis échouent. 80 % disparaissent dans leurs cinq premières années. Le problème des propriétaires d'entreprises en difficulté n'est pas leur méconnaissance de la finance, du marketing ou de la gestion. Le problème, c'est qu'ils consacrent leur temps et leur énergie à défendre leurs convictions, au lieu d'apprendre et de s'adapter. Les quatre idées fondamentales : le mythe de l'entrepreneur, la révolution du clé en main, le processus de développement commercial, et l'application systématique par tout propriétaire. Votre entreprise est le reflet de qui vous êtes."
+    },
+    // 🔒 PREMIUM
+    chapters: [
+      {
+        id: "4-1",
+        title: "Le mythe de l'entrepreneuriat et les 3 personnalités",
+        duration: 12,
+        content: "La crise entrepreneuriale : la plupart des personnes qui créent une entreprise ont commencé par travailler pour quelqu'un d'autre. L'hypothèse fatale : comprendre le travail technique impliqué dans une entreprise ne signifie pas comprendre l'entreprise elle-même. Un cuisinier ouvre un restaurant mais son plus grand atout devient son plus grand handicap. Les trois personnalités : l'entrepreneur (visionnaire qui vit dans le futur), le manager (pragmatique qui vit dans le passé), le technicien (exécutant qui vit dans le présent). La majorité des créateurs d'entreprise sont composés de 10 % d'entrepreneurs, 20 % de managers et 70 % de techniciens. Celui qui est aux commandes est le technicien."
+      },
+      {
+        id: "4-2",
+        title: "L'enfance, l'adolescence et la zone de confort",
+        duration: 14,
+        content: "La phase du technicien : vous travaillez 10 à 16 heures par jour. L'entreprise et le propriétaire ne font qu'un. Une entreprise qui dépend de vous n'est pas une entreprise, c'est un emploi. L'adolescence : vous embauchez votre premier employé mais vous gérez par abdication plutôt que par délégation. La zone de confort est une limite au-delà de laquelle le propriétaire perd le contrôle. Pour survivre, vous devez tout donner jusqu'à l'épuisement."
+      },
+      {
+        id: "4-3",
+        title: "La maturité et la révolution clé en main",
+        duration: 14,
+        content: "La maturité se caractérise par la perspective entrepreneuriale : percevoir l'entreprise comme un système de parties intégrées. La révolution du clé en main : Ray Kroc et McDonald's en 1952. La valeur d'une entreprise ne réside pas dans ce qu'elle vend, mais dans la manière dont elle vend. Vendre l'entreprise plutôt que le produit. Le prototype de franchise offre un taux de réussite de 95 %. Le système permet de concilier les trois facettes de votre personnalité."
+      },
+      {
+        id: "4-4",
+        title: "Travailler sur votre entreprise et le processus de développement",
+        duration: 11,
+        content: "Le but principal de votre entreprise est de servir votre vie, et non l'inverse. Les six règles du jeu de la franchise : offrir une valeur constante, être exploité par des personnes au niveau de compétences le plus bas possible, être un lieu d'ordre impeccable, documenter tout le travail, fournir un service uniforme, utiliser une tenue uniforme. Le processus de développement commercial repose sur trois piliers : l'innovation (faire avancer les choses), la quantification (mesurer l'impact), l'orchestration (systématiser les solutions)."
+      },
+      {
+        id: "4-5",
+        title: "Les 7 étapes de votre programme de développement",
+        duration: 12,
+        content: "Étape 1 : Votre objectif principal — comment voulez-vous vivre ? Étape 2 : Votre objectif stratégique — combien avez-vous besoin pour vivre indépendamment ? Étape 3 : Votre stratégie organisationnelle — organisez-vous autour des postes. Étape 4 : Votre stratégie de gestion — créez un système de gestion. Étape 5 : Votre stratégie RH — créez un environnement où l'action prime. Étape 6 : Votre stratégie marketing — ce qui compte, c'est ce que votre client veut. Étape 7 : Votre stratégie systémique — tout est interdépendant. Conclusion : votre petite entreprise est votre propre monde. Arrêtez d'y penser, il est temps d'agir."
       }
     ]
   }
