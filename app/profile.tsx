@@ -1,410 +1,187 @@
-import { type ComponentProps, useMemo, useState } from "react"
-import { Alert, Pressable, ScrollView, Text, View } from "react-native"
+// frontend/app/profile.tsx
+import { View, Text, Pressable, Alert, ScrollView } from "react-native"
+import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-import { LinearGradient } from "expo-linear-gradient"
-
+import { useAuth } from "../hooks/useAuth"
 import { BottomNav } from "../components/layout/BottomNav"
 import { TopHeader } from "../components/layout/TopHeader"
 
-type MenuItem = {
-  icon: ComponentProps<typeof Ionicons>["name"]
-  label: string
-  value?: string
-  accent?: boolean
-}
-
-const userData = {
-  name: "Jean Dupont",
-  email: "jean@example.com",
-  isPremium: true,
-  memberSince: "Janvier 2024",
-  stats: {
-    booksRead: 12,
-    totalTime: 18,
-    currentStreak: 7,
-    longestStreak: 14
-  }
-}
-
-const weeklyProgress = [100, 100, 75, 100, 50, 0, 0]
-const weekDays = ["L", "M", "M", "J", "V", "S", "D"]
-
-function StatCard({
-  icon,
-  value,
-  label,
-  highlight = false
-}: {
-  icon: ComponentProps<typeof Ionicons>["name"]
-  value: string | number
-  label: string
-  highlight?: boolean
-}) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        borderRadius: 16,
-        padding: 16,
-        backgroundColor: highlight ? "rgba(212,175,55,0.10)" : "#171717",
-        borderWidth: highlight ? 1 : 0,
-        borderColor: highlight ? "rgba(212,175,55,0.22)" : "transparent"
-      }}
-    >
-      <View style={{ marginBottom: 10, flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Ionicons
-          name={icon}
-          size={16}
-          color={highlight ? "#D4AF37" : "#8A8A8A"}
-        />
-      </View>
-
-      <Text
-        style={{
-          color: highlight ? "#D4AF37" : "white",
-          fontSize: 28,
-          fontWeight: "700"
-        }}
-      >
-        {value}
-      </Text>
-
-      <Text style={{ color: "#8A8A8A", fontSize: 12, marginTop: 4 }}>
-        {label}
-      </Text>
-    </View>
-  )
-}
-
 export default function ProfileScreen() {
-  const [dailyGoal] = useState(15)
+  const router = useRouter()
+  const { user, token, logout, purchases } = useAuth()
+  const isLoggedIn = !!token
 
-  const todayIndex = useMemo(() => {
-    const day = new Date().getDay()
-    return (day + 6) % 7
-  }, [])
-
-  const menuItems: MenuItem[] = [
-    {
-      icon: "diamond-outline",
-      label: "Abonnement Premium",
-      value: "Actif",
-      accent: true
-    },
-    {
-      icon: "flag-outline",
-      label: "Objectif quotidien",
-      value: `${dailyGoal} min`
-    },
-    {
-      icon: "notifications-outline",
-      label: "Notifications",
-      value: "Activées"
-    },
-    {
-      icon: "moon-outline",
-      label: "Mode sombre",
-      value: "Activé"
-    },
-    {
-      icon: "help-circle-outline",
-      label: "Aide & Support"
-    },
-    {
-      icon: "settings-outline",
-      label: "Paramètres"
-    }
-  ]
-
-  const showPlaceholder = (title: string) => {
-    Alert.alert(title, "Cette section sera bientôt connectée.")
+  const handleLogout = async () => {
+    Alert.alert(
+      "Déconnexion",
+      "Voulez-vous vraiment vous déconnecter ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Se déconnecter", 
+          style: "destructive",
+          onPress: async () => {
+            await logout()
+            router.replace("/")
+          }
+        }
+      ]
+    )
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
-      <TopHeader />
-
-      <ScrollView
+      <TopHeader transparent={false} showSearch={false} showNotifications={false} />
+      
+      <ScrollView 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingTop: 102,
-          paddingBottom: 110
-        }}
+        contentContainerStyle={{ paddingTop: 100, paddingBottom: 80 }}
       >
-        <View style={{ position: "relative", paddingHorizontal: 20, paddingBottom: 24 }}>
-          <LinearGradient
-            colors={["rgba(212,175,55,0.12)", "rgba(212,175,55,0.03)", "transparent"]}
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              height: 190
-            }}
-          />
-
-          <View
-            style={{
-              position: "relative",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 16
-            }}
-          >
-            <View style={{ position: "relative" }}>
-              <View
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  backgroundColor: "#171717",
-                  borderWidth: 2,
-                  borderColor: "rgba(212,175,55,0.20)",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}
-              >
-                <Ionicons name="person-outline" size={36} color="#D4AF37" />
-              </View>
-
-              {userData.isPremium && (
-                <View
-                  style={{
-                    position: "absolute",
-                    right: -2,
-                    bottom: -2,
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: "#D4AF37",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  <Ionicons name="diamond" size={14} color="#050505" />
-                </View>
-              )}
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 22,
-                  fontWeight: "700"
-                }}
-              >
-                {userData.name}
-              </Text>
-
-              <Text style={{ color: "#8A8A8A", fontSize: 14, marginTop: 4 }}>
-                {userData.email}
-              </Text>
-
-              <Text style={{ color: "#D4AF37", fontSize: 12, marginTop: 6 }}>
-                Membre depuis {userData.memberSince}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-          <View style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
-            <StatCard
-              icon="book-outline"
-              value={userData.stats.booksRead}
-              label="Livres lus"
-            />
-            <StatCard
-              icon="time-outline"
-              value={`${userData.stats.totalTime}h`}
-              label="Temps d'écoute"
-            />
-          </View>
-
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <StatCard
-              icon="flag-outline"
-              value={userData.stats.currentStreak}
-              label="Jours consécutifs"
-              highlight
-            />
-            <StatCard
-              icon="headset-outline"
-              value={userData.stats.longestStreak}
-              label="Record personnel"
-            />
-          </View>
-        </View>
-
-        <View style={{ paddingHorizontal: 20, paddingVertical: 8 }}>
-          <View
-            style={{
-              borderRadius: 18,
-              backgroundColor: "#171717",
-              padding: 20
-            }}
-          >
+        <View style={{ paddingHorizontal: 20 }}>
+          {/* En-tête profil */}
+          <View style={{ alignItems: "center", marginBottom: 24 }}>
             <View
               style={{
-                marginBottom: 16,
-                flexDirection: "row",
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                backgroundColor: "#1A1A1A",
                 alignItems: "center",
-                justifyContent: "space-between"
+                justifyContent: "center",
+                borderWidth: 2,
+                borderColor: "#D4AF37"
               }}
             >
-              <Text style={{ color: "white", fontSize: 18, fontWeight: "600" }}>
-                Cette semaine
-              </Text>
+              <Ionicons name="person" size={50} color="#D4AF37" />
+            </View>
+            
+            <Text style={{ color: "white", fontSize: 24, fontWeight: "700", marginTop: 16 }}>
+              {isLoggedIn ? user?.email || "Utilisateur" : "Invité"}
+            </Text>
+            
+            <Text style={{ color: "#8A8A8A", fontSize: 14, marginTop: 4 }}>
+              {isLoggedIn ? "Compte premium" : "Compte gratuit"}
+            </Text>
+          </View>
 
-              <Text style={{ color: "#D4AF37", fontSize: 14, fontWeight: "600" }}>
-                85% objectif
+          {/* Stats */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              backgroundColor: "#141414",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 24,
+              borderWidth: 1,
+              borderColor: "#232323"
+            }}
+          >
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ color: "#D4AF37", fontSize: 20, fontWeight: "700" }}>
+                {purchases.length}
+              </Text>
+              <Text style={{ color: "#8A8A8A", fontSize: 12, marginTop: 4 }}>
+                Résumés achetés
               </Text>
             </View>
-
-            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
-              {weekDays.map((day, index) => {
-                const progress = weeklyProgress[index]
-                const isToday = index === todayIndex
-
-                return (
-                  <View
-                    key={`${day}-${index}`}
-                    style={{
-                      flex: 1,
-                      alignItems: "center",
-                      gap: 8
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: "100%",
-                        height: 64,
-                        borderRadius: 999,
-                        overflow: "hidden",
-                        backgroundColor: "#2B2B2B",
-                        justifyContent: "flex-end",
-                        borderWidth: isToday ? 2 : 0,
-                        borderColor: isToday ? "rgba(212,175,55,0.30)" : "transparent"
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: "100%",
-                          height: `${progress}%`,
-                          backgroundColor: "#D4AF37"
-                        }}
-                      />
-                    </View>
-
-                    <Text
-                      style={{
-                        color: isToday ? "#D4AF37" : "#8A8A8A",
-                        fontSize: 12,
-                        fontWeight: isToday ? "700" : "500"
-                      }}
-                    >
-                      {day}
-                    </Text>
-                  </View>
-                )
-              })}
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ color: "#D4AF37", fontSize: 20, fontWeight: "700" }}>
+                {isLoggedIn ? "✓" : "—"}
+              </Text>
+              <Text style={{ color: "#8A8A8A", fontSize: 12, marginTop: 4 }}>
+                Statut
+              </Text>
             </View>
           </View>
-        </View>
 
-        <View style={{ paddingHorizontal: 20, paddingVertical: 8, gap: 8 }}>
-          {menuItems.map((item) => (
-            <Pressable
-              key={item.label}
-              onPress={() => showPlaceholder(item.label)}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 16,
-                borderRadius: 16,
-                padding: 16,
-                backgroundColor: item.accent ? "rgba(212,175,55,0.10)" : "#171717",
-                opacity: pressed ? 0.84 : 1
-              })}
-            >
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
+          {/* Menu */}
+          <View style={{ gap: 12 }}>
+            <MenuItem 
+              icon="bookmark-outline" 
+              label="Mes favoris" 
+              onPress={() => Alert.alert("Bientôt disponible")}
+            />
+            <MenuItem 
+              icon="download-outline" 
+              label="Téléchargements" 
+              onPress={() => Alert.alert("Bientôt disponible")}
+            />
+            <MenuItem 
+              icon="settings-outline" 
+              label="Paramètres" 
+              onPress={() => Alert.alert("Bientôt disponible")}
+            />
+          </View>
+
+          {/* Bouton Auth / Logout */}
+          <View style={{ marginTop: 32, gap: 12 }}>
+            {!isLoggedIn ? (
+              <Pressable
+                onPress={() => router.push("/auth")}
+                style={({ pressed }) => ({
+                  backgroundColor: "#D4AF37",
+                  padding: 16,
+                  borderRadius: 12,
                   alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: item.accent ? "#D4AF37" : "#242424"
-                }}
+                  opacity: pressed ? 0.8 : 1
+                })}
               >
-                <Ionicons
-                  name={item.icon}
-                  size={18}
-                  color={item.accent ? "#050505" : "#8A8A8A"}
-                />
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: item.accent ? "#D4AF37" : "white",
-                    fontSize: 15,
-                    fontWeight: "600"
-                  }}
-                >
-                  {item.label}
+                <Text style={{ color: "#050505", fontWeight: "700", fontSize: 16 }}>
+                  Se connecter / Créer un compte
                 </Text>
-              </View>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={handleLogout}
+                style={({ pressed }) => ({
+                  backgroundColor: "#1A1A1A",
+                  borderWidth: 1,
+                  borderColor: "#333",
+                  padding: 16,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  opacity: pressed ? 0.8 : 1
+                })}
+              >
+                <Text style={{ color: "#FF5A5F", fontWeight: "700", fontSize: 16 }}>
+                  Se déconnecter
+                </Text>
+              </Pressable>
+            )}
+          </View>
 
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                {item.value ? (
-                  <Text style={{ color: "#8A8A8A", fontSize: 13 }}>
-                    {item.value}
-                  </Text>
-                ) : null}
-
-                <Ionicons name="chevron-forward" size={16} color="#7A7A7A" />
-              </View>
-            </Pressable>
-          ))}
+          {/* Version */}
+          <Text style={{ color: "#555", fontSize: 12, textAlign: "center", marginTop: 32 }}>
+            Version 1.0.0
+          </Text>
         </View>
-
-        <View style={{ paddingHorizontal: 20, paddingVertical: 8 }}>
-          <Pressable
-            onPress={() => Alert.alert("Déconnexion", "Action de déconnexion simulée.")}
-            style={({ pressed }) => ({
-              width: "100%",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              borderRadius: 16,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              backgroundColor: pressed ? "rgba(239,68,68,0.12)" : "transparent"
-            })}
-          >
-            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-            <Text style={{ color: "#EF4444", fontSize: 15, fontWeight: "600" }}>
-              Se déconnecter
-            </Text>
-          </Pressable>
-        </View>
-
-        <Text
-          style={{
-            paddingHorizontal: 20,
-            paddingTop: 8,
-            textAlign: "center",
-            color: "#6F6F6F",
-            fontSize: 12
-          }}
-        >
-          SUMMARY v1.0.0
-        </Text>
       </ScrollView>
 
       <BottomNav />
     </View>
+  )
+}
+
+function MenuItem({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        backgroundColor: "#141414",
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#232323",
+        opacity: pressed ? 0.8 : 1
+      })}
+    >
+      <Ionicons name={icon} size={22} color="#D4AF37" />
+      <Text style={{ color: "white", fontSize: 16, flex: 1 }}>{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color="#666" />
+    </Pressable>
   )
 }

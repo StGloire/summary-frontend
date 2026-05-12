@@ -1,19 +1,32 @@
-const API_URL = "http://localhost:5000" // ou ton URL Render plus tard
+// frontend/services/api.ts
+import { ENV } from "../config/env"
+
+export const API_URL = `http://${ENV.IP_ADDRESS}:${ENV.PORT}`
 
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {},
   token?: string
 ) {
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
+
     headers: {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` })
+
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`
+          }
+        : {})
     }
   })
 
-  return res.json()
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || "Erreur API")
+  }
+
+  return data
 }
-
-

@@ -1,41 +1,9 @@
-import { useState } from "react"
-import { apiFetch } from "../services/api"
-import { saveToken } from "../services/authStorage"
+// frontend/hooks/useAuth.ts
+
+import { useContext } from "react"
+
+import { AuthContext } from "../contexts/AuthContext"
 
 export function useAuth() {
-  const [loading, setLoading] = useState(false)
-
-  const login = async (email: string, password: string) => {
-    setLoading(true)
-
-    const res = await apiFetch("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password })
-    })
-
-    if (res.token) {
-      await saveToken(res.token)
-    }
-
-    setLoading(false)
-    return res
-  }
-
-  const register = async (email: string, password: string) => {
-    setLoading(true)
-
-    const res = await apiFetch("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ email, password })
-    })
-
-    if (res.token) {
-      await saveToken(res.token)
-    }
-
-    setLoading(false)
-    return res
-  }
-
-  return { login, register, loading }
+  return useContext(AuthContext)
 }

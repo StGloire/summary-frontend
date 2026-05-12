@@ -18,7 +18,7 @@ import { categories, getBooksByCategory } from "../data/books"
 type SortBy = "recent" | "duration" | "title"
 type Book = ReturnType<typeof getBooksByCategory>[number]
 
-const sortOptions: Array<{ value: SortBy; label: string }> = [
+const sortOptions: { value: SortBy; label: string }[] = [
   { value: "recent", label: "Récents" },
   { value: "duration", label: "Durée" },
   { value: "title", label: "Titre" }
@@ -91,7 +91,11 @@ export default function ExploreScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
-      <TopHeader showSearch={false} />
+      <TopHeader 
+        transparent={false}
+        showAuth={true} 
+        showSearch={false}     // ✅ Active l'auth
+      />
 
       <View style={{ flex: 1, paddingTop: 102 }}>
         <View

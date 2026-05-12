@@ -45,7 +45,10 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B0B0B" }}>
-      <TopHeader transparent />
+      <TopHeader 
+        transparent={true}  // ou false selon ton design
+        showAuth={true}      // ✅ Active l'auth
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <HeroSection book={heroBook} />

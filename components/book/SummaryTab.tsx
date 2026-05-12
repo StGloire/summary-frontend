@@ -1,6 +1,6 @@
 // frontend/components/book/SummaryTab.tsx
 import { Text, View } from "react-native"
-import type { Book } from ".../../../data/Books"
+import type { Book } from "../../data/books"
 
 type Props = {
   book: Book
@@ -20,7 +20,7 @@ export function SummaryTab({ book }: Props) {
           padding: 16
         }}
       >
-        <Text style={{ color: "white", fontSize: 15, fontWeight: "700" }}>A propos de l'auteur</Text>
+        <Text style={{ color: "white", fontSize: 15, fontWeight: "700" }}>A propos de l&apos;auteur</Text>
 
         <Text style={{ color: "#9A9A9A", lineHeight: 22, marginTop: 10 }}>
           {book.author} est un auteur reconnu dans le domaine du {book.category.toLowerCase()}. Ses

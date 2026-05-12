@@ -14,7 +14,7 @@ import { ChaptersTab } from "../../components/book/ChaptersTab"
 import { IdeasTab } from "../../components/book/IdeasTab"
 
 import { getBookById } from "../../data/books"
-import { usePurchases } from "../../hooks/usePurchases"
+import { useAuth } from "../../hooks/useAuth"
 
 type BookTab = "summary" | "chapters" | "ideas"
 
@@ -22,6 +22,7 @@ type ChapterListItem = AudioPlayerChapter & {
   isLocked: boolean
   displayIndex?: number
   subtitle: string
+  isFree: boolean
 }
 
 export default function BookDetailScreen() {
@@ -30,7 +31,7 @@ export default function BookDetailScreen() {
   const selectedBookId = Array.isArray(id) ? id[0] : id
 
   const book = selectedBookId ? getBookById(selectedBookId) : null
-  const { purchases, loading } = usePurchases()
+  const { purchases, loading } = useAuth()
   const isPurchased = !!book && purchases.includes(book.id)
 
   const [currentChapter, setCurrentChapter] = useState<AudioPlayerChapter | null>(null)
@@ -54,25 +55,31 @@ export default function BookDetailScreen() {
   const chapterItems = useMemo<ChapterListItem[]>(() => {
     if (!book || !introChapter) return []
 
-    return [
-      {
-        ...introChapter,
-        isLocked: false,
-        subtitle: `Introduction gratuite • ${introChapter.duration} min`
-      },
-      ...book.chapters.map((chapter, index) => ({
-        id: chapter.id,
-        title: chapter.title,
-        content: chapter.content,
-        duration: chapter.duration,
-        isFree: false,
-        isLocked: !isPurchased,
-        displayIndex: index + 1,
-        subtitle: !isPurchased
-          ? `Chapitre premium • ${chapter.duration} min`
-          : `${chapter.duration} min`
-      }))
-    ]
+    // ✅ Construction explicite sans spread operator
+    const introItem: ChapterListItem = {
+      id: introChapter.id,
+      title: introChapter.title,
+      content: introChapter.content,
+      duration: introChapter.duration,
+      isFree: true,
+      isLocked: false,
+      subtitle: `Introduction gratuite • ${introChapter.duration} min`
+    }
+
+    const premiumItems: ChapterListItem[] = book.chapters.map((chapter, index) => ({
+      id: chapter.id,
+      title: chapter.title,
+      content: chapter.content,
+      duration: chapter.duration,
+      isFree: false,
+      isLocked: !isPurchased,
+      displayIndex: index + 1,
+      subtitle: !isPurchased
+        ? `Chapitre premium • ${chapter.duration} min`
+        : `${chapter.duration} min`
+    }))
+
+    return [introItem, ...premiumItems]
   }, [book, introChapter, isPurchased])
 
   const playableChapters = useMemo<AudioPlayerChapter[]>(() => {
@@ -92,7 +99,7 @@ export default function BookDetailScreen() {
     setCurrentChapter(null)
     setActiveTab("summary")
     void stop()
-  }, [selectedBookId])
+  }, [selectedBookId, stop])
 
   const playChapter = async (chapter: AudioPlayerChapter) => {
     setCurrentChapter(chapter)

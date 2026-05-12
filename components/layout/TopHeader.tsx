@@ -2,19 +2,23 @@ import { View, Text, Pressable } from "react-native"
 import { Image } from "expo-image"
 import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
+import { useAuth } from "../../hooks/useAuth" // ✅ Ajouté
 
 interface TopHeaderProps {
   transparent?: boolean
   showSearch?: boolean
   showNotifications?: boolean
+  showAuth?: boolean // ✅ Ajouté
 }
 
 export function TopHeader({
   transparent = false,
   showSearch = true,
-  showNotifications = true
+  showNotifications = true,
+  showAuth = false // ✅ Par défaut false
 }: TopHeaderProps) {
   const router = useRouter()
+  const { token } = useAuth() // ✅ Récupère le token pour savoir si l'utilisateur est connecté
 
   return (
     <View
@@ -91,6 +95,32 @@ export function TopHeader({
                 }}
               />
             </View>
+          </Pressable>
+        )}
+
+        {/* ✅ Bouton d'authentification - visible seulement si showAuth est true et utilisateur non connecté */}
+        {showAuth && !token && (
+          <Pressable
+            onPress={() => router.push("/auth")}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.7 : 1,
+              padding: 8
+            })}
+          >
+            <Ionicons name="log-in-outline" size={22} color="#ccc" />
+          </Pressable>
+        )}
+
+        {/* ✅ Optionnel : Icône de profil quand connecté */}
+        {showAuth && token && (
+          <Pressable
+            onPress={() => router.push("/profile")}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.7 : 1,
+              padding: 8
+            })}
+          >
+            <Ionicons name="person-circle-outline" size={22} color="#D4AF37" />
           </Pressable>
         )}
       </View>

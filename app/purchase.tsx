@@ -1,4 +1,4 @@
-import { usePurchases } from "../hooks/usePurchases"
+import { useAuth } from "../hooks/useAuth"
 import { type ComponentProps, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons"
 type PaymentMethod = "mtn" | "airtel"
 type PaymentStep = "form" | "processing" | "pending"
 
-const paymentMethods: Array<{
+const paymentMethods: {
   id: PaymentMethod
   label: string
   shortLabel: string
@@ -24,7 +24,7 @@ const paymentMethods: Array<{
   backgroundColor: string
   borderColor: string
   icon: ComponentProps<typeof Ionicons>["name"]
-}> = [
+}[] = [
   {
     id: "mtn",
     label: "MTN MoMo",
@@ -49,11 +49,13 @@ const paymentMethods: Array<{
 
 export default function PurchaseScreen() {
   const router = useRouter()
-  const { isPurchased: hasPurchasedBook, purchaseBook } = usePurchases()
+  const { purchases, purchaseBook } = useAuth()
   const { bookId, title } = useLocalSearchParams()
   const selectedBookId = Array.isArray(bookId) ? bookId[0] : bookId
   const selectedTitle = Array.isArray(title) ? title[0] : title
-  const isPurchased = selectedBookId ? hasPurchasedBook(selectedBookId) : false
+  const isPurchased = selectedBookId
+  ? purchases.includes(selectedBookId)
+  : false
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("mtn")
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -571,7 +573,7 @@ export default function PurchaseScreen() {
             lineHeight: 18
           }}
         >
-          Simulation locale: aucune transaction réelle n'est envoyée.
+          Simulation locale: aucune transaction réelle n&apos;est envoyée.
           Le résumé est débloqué après validation de cette étape.
         </Text>
       </ScrollView>
