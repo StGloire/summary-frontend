@@ -117,20 +117,39 @@ export default function ProfileScreen() {
           {/* Bouton Auth / Logout */}
           <View style={{ marginTop: 32, gap: 12 }}>
             {!isLoggedIn ? (
-              <Pressable
-                onPress={() => router.push("/auth")}
-                style={({ pressed }) => ({
-                  backgroundColor: "#D4AF37",
-                  padding: 16,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  opacity: pressed ? 0.8 : 1
-                })}
-              >
-                <Text style={{ color: "#050505", fontWeight: "700", fontSize: 16 }}>
-                  Se connecter / Créer un compte
-                </Text>
-              </Pressable>
+              <View style={{ gap: 12 }}>
+                <Pressable
+                  onPress={() => router.push("/auth/login")}
+                  style={({ pressed }) => ({
+                    backgroundColor: "#D4AF37",
+                    padding: 16,
+                    borderRadius: 12,
+                    alignItems: "center",
+                    opacity: pressed ? 0.8 : 1
+                  })}
+                >
+                  <Text style={{ color: "#050505", fontWeight: "700", fontSize: 16 }}>
+                    Se connecter
+                  </Text>
+                </Pressable>
+                
+                <Pressable
+                  onPress={() => router.push("/auth/register")}
+                  style={({ pressed }) => ({
+                    backgroundColor: "#1A1A1A",
+                    borderWidth: 1,
+                    borderColor: "#D4AF37",
+                    padding: 16,
+                    borderRadius: 12,
+                    alignItems: "center",
+                    opacity: pressed ? 0.8 : 1
+                  })}
+                >
+                  <Text style={{ color: "#D4AF37", fontWeight: "700", fontSize: 16 }}>
+                    Créer un compte
+                  </Text>
+                </Pressable>
+              </View>
             ) : (
               <Pressable
                 onPress={handleLogout}

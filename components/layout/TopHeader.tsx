@@ -101,7 +101,7 @@ export function TopHeader({
         {/* ✅ Bouton d'authentification - visible seulement si showAuth est true et utilisateur non connecté */}
         {showAuth && !token && (
           <Pressable
-            onPress={() => router.push("/auth")}
+            onPress={() => router.push("/auth/login")}
             style={({ pressed }) => ({
               opacity: pressed ? 0.7 : 1,
               padding: 8

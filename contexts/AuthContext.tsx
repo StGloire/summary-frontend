@@ -7,7 +7,7 @@ import {
   type ReactNode
 } from "react"
 
-import { login, register } from "../services/auth.service"
+import { login, register, getCurrentUser } from "../services/auth.service"
 import { getPurchases } from "../services/purchase.service"
 import { apiFetch } from "../services/api" // ✅ Ajouté
 
@@ -17,6 +17,7 @@ import {
   removeToken
 } from "../storage/authStorage"
 
+ 
 type User = {
   id: number
   email: string
@@ -27,6 +28,7 @@ type AuthContextType = {
   token: string | null
   purchases: string[]
   loading: boolean
+  isAuthenticated: boolean
 
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
@@ -47,6 +49,7 @@ export function AuthProvider({
   const [token, setToken] = useState<string | null>(null)
   const [purchases, setPurchases] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const isAuthenticated = !!user
 
   useEffect(() => {
     restoreSession()
@@ -54,27 +57,38 @@ export function AuthProvider({
 
   async function restoreSession() {
     try {
-      const savedToken = await getToken()
+        const savedToken = await getToken()
 
-      if (!savedToken) {
+        if (!savedToken) {
         setLoading(false)
         return
-      }
+        }
 
-      setToken(savedToken)
+        setToken(savedToken)
 
-      const purchaseData = await getPurchases(savedToken)
+        // ✅ récupérer user réel
+        const currentUser = await getCurrentUser(savedToken)
 
-      setPurchases(
+        setUser(currentUser)
+
+        // ✅ récupérer achats
+        const purchaseData = await getPurchases(savedToken)
+
+        setPurchases(
         purchaseData.map((item: any) => item.book_id)
-      )
+        )
     } catch (error) {
-      console.log(error)
-      await removeToken()
+        console.log(error)
+
+        await removeToken()
+
+        setUser(null)
+        setToken(null)
+        setPurchases([])
     } finally {
-      setLoading(false)
+        setLoading(false)
     }
-  }
+    }
 
   async function signIn(email: string, password: string) {
     const data = await login({
@@ -128,7 +142,11 @@ export function AuthProvider({
       )
 
       // ✅ Ajoute le bookId aux achats localement
-      setPurchases((prev) => [...prev, bookId])
+      setPurchases((prev) =>
+        prev.includes(bookId)
+            ? prev
+            : [...prev, bookId]
+        )
     } catch (error) {
       console.error("Erreur lors de l'achat :", error)
       throw error
@@ -142,6 +160,7 @@ export function AuthProvider({
         token,
         purchases,
         loading,
+        isAuthenticated,
         signIn,
         signUp,
         logout,

@@ -20,3 +20,7 @@ export async function login(payload: AuthPayload) {
     body: JSON.stringify(payload)
   })
 }
+
+export async function getCurrentUser(token: string) {
+  return apiFetch("/auth/me", {}, token)
+}
